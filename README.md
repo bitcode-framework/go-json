@@ -67,12 +67,12 @@ Git Bash, MSYS2, and Cygwin on Windows also work with the `install.sh` one-liner
 Pin a version or choose the install directory:
 
 ```bash
-GO_JSON_VERSION=v0.1.0 GO_JSON_BIN_DIR="$HOME/bin" \
+GO_JSON_VERSION=v0.1.4 GO_JSON_BIN_DIR="$HOME/bin" \
   curl -fsSL https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.sh | sh
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.ps1))) -Version v0.1.0 -BinDir C:\tools
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.ps1))) -Version v0.1.4 -BinDir C:\tools
 ```
 
 The installer falls back to `go install` when no prebuilt binary matches your
