@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -18,12 +19,29 @@ import (
 	"github.com/bitcode-framework/go-json/stdlib"
 )
 
-// Version is the CLI version. It defaults to the core language version and can
-// be overridden at link time by release builds, so a binary reports the version
-// of the module it was installed from:
-//
-//	go build -ldflags "-X github.com/bitcode-framework/go-json/cmd/cli.Version=0.1.1"
+// Version is the fallback CLI version, used when neither a link-time override
+// nor module build info is available.
 var Version = "0.1.0"
+
+// buildVersion is set by release builds via
+// -ldflags "-X github.com/bitcode-framework/go-json/cmd/cli.buildVersion=0.1.3".
+var buildVersion string
+
+// ResolveVersion reports the CLI version.
+//
+// Precedence: link-time override, then the module version recorded in the build
+// info (so `go install ...@v0.1.3` reports 0.1.3), then the compiled default.
+func ResolveVersion() string {
+	if buildVersion != "" {
+		return strings.TrimPrefix(buildVersion, "v")
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if v := info.Main.Version; v != "" && v != "(devel)" {
+			return strings.TrimPrefix(v, "v")
+		}
+	}
+	return Version
+}
 
 // Run executes the go-json CLI with the given options.
 // Call ApplyOptions before Run to register script runtimes.
@@ -54,7 +72,7 @@ func Run(opts ...CLIOption) {
 	case "migrate":
 		cmdMigrate(os.Args[2:])
 	case "--version", "-v", "version":
-		fmt.Printf("go-json %s\n", Version)
+		fmt.Printf("go-json %s\n", ResolveVersion())
 	case "--help", "-h", "help":
 		printUsage()
 	default:
