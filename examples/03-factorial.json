@@ -1,0 +1,18 @@
+{
+  "name": "math_demo",
+  "functions": {
+    "factorial": {
+      "params": {"n": "int"},
+      "returns": "int",
+      "steps": [
+        {"if": "n <= 1", "then": [{"return": 1}]},
+        {"let": "sub", "call": "factorial", "with": {"n": "n - 1"}},
+        {"return": "n * sub"}
+      ]
+    }
+  },
+  "steps": [
+    {"let": "result", "call": "factorial", "with": {"n": "10"}},
+    {"return": "result"}
+  ]
+}

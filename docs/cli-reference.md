@@ -10,10 +10,35 @@ go-json <command> [options]
 
 | Binary | Install | Script Runtimes |
 |--------|---------|-----------------|
-| Basic | `go install github.com/bitcode-framework/go-json/cmd/go-json@latest` | None (core language only) |
-| Full | `go install github.com/bitcode-framework/go-json-runtimes/cmd/go-json@latest` | goja (.js), quickjs (.js), yaegi (.go), Node.js (.ts/.mjs, auto), Python (.py, auto) |
+| Full | `go install github.com/bitcode-framework/go-json-runtimes/cmd/go-json@latest` | goja (.js), quickjs (.js), yaegi (.go), wasm (.wasm), Node.js (.ts/.mjs), Python (.py) |
+| Lite | `go install github.com/bitcode-framework/go-json/cmd/go-json-lite@latest` | None (core language only) |
 
-The "full" variant includes embedded script runtimes so `script:` imports work out of the box.
+The "full" variant includes embedded script runtimes so `script:` imports work
+out of the box. It is the recommended default.
+
+Two binaries are needed because `go-json-runtimes` depends on `go-json`. Core
+cannot import the runtimes without creating a module cycle, and core keeps zero
+dependencies by design.
+
+### No-toolchain install
+
+Both variants are also published as prebuilt binaries, so Go is not required:
+
+```bash
+# Linux / macOS (Git Bash on Windows works too)
+curl -fsSL https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.sh | sh
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.ps1 | iex
+```
+
+The installer detects OS and architecture, downloads the matching release,
+verifies its SHA-256 checksum, and adds the binary to your PATH. Set
+`GO_JSON_VERSION` (or `-Version`) to pin a release, `GO_JSON_BIN_DIR` (or
+`-BinDir`) to choose the install directory, and `GO_JSON_LITE=1` (or `-Lite`)
+for the lean build.
 
 ## Commands
 

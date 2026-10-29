@@ -88,7 +88,7 @@ func cmdRun(args []string) {
 	maxDepth := fs.Int("max-depth", 0, "Override default call depth limit")
 	ioModules := fs.String("io", "", "Enable I/O modules (http,fs,sql,exec or 'all')")
 	trace := fs.Bool("trace", false, "Print execution trace")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json run <program.json> [options]")
@@ -211,7 +211,7 @@ func cmdRun(args []string) {
 func cmdCheck(args []string) {
 	fs := flag.NewFlagSet("check", flag.ExitOnError)
 	verbose := fs.Bool("verbose", false, "Show program metadata")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json check <program.json>")
@@ -262,7 +262,7 @@ func cmdAST(args []string) {
 	fs := flag.NewFlagSet("ast", flag.ExitOnError)
 	output := fs.String("output", "", "Write to file (default: stdout)")
 	format := fs.String("format", "json", "Output format (json)")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json ast <program.json> [--output ast.json]")
@@ -309,7 +309,7 @@ func cmdCodegen(args []string) {
 	target := fs.String("target", "", "Target language: go, js, python (required)")
 	output := fs.String("output", "", "Write to file (default: stdout)")
 	pkg := fs.String("package", "main", "Go package name (only for --target go)")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 || *target == "" {
 		fmt.Fprintln(os.Stderr, "Usage: go-json codegen <program.json> --target go|js|python [--output file]")
@@ -367,7 +367,7 @@ func cmdMigrate(args []string) {
 	to := fs.String("to", "v2", "Target version")
 	output := fs.String("output", "", "Write to file (default: stdout)")
 	dryRun := fs.Bool("dry-run", false, "Show changes without applying")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json migrate <program.json> [--from v1] [--to v2] [--dry-run]")
@@ -463,7 +463,7 @@ func cmdServe(args []string) {
 	host := fs.String("host", "", "Override server host")
 	docs := fs.Bool("docs", false, "Enable /docs Swagger UI endpoint")
 	ioSpec := fs.String("io", "all", "Enable I/O modules (http,fs,sql,exec or 'all')")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json serve <program.json> [options]")
@@ -532,7 +532,7 @@ func cmdServe(args []string) {
 func cmdOpenAPI(args []string) {
 	fs := flag.NewFlagSet("openapi", flag.ExitOnError)
 	output := fs.String("output", "", "Output file (default: stdout)")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "Usage: go-json openapi <program.json> [--output file.json]")
@@ -599,7 +599,7 @@ func cmdGenerateCRUD(args []string) {
 	auth := fs.Bool("auth", false, "Add JWT auth middleware to write routes")
 	output := fs.String("output", "", "Output file (default: stdout)")
 	dryRun := fs.Bool("dry-run", false, "Print without writing")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if *table == "" {
 		fmt.Fprintln(os.Stderr, "Error: --table is required")
@@ -648,7 +648,7 @@ func cmdGenerateCRUD(args []string) {
 func cmdGenerateAuth(args []string) {
 	fs := flag.NewFlagSet("generate auth", flag.ExitOnError)
 	output := fs.String("output", "", "Output file (default: stdout)")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	result, err := generate.GenerateAuth()
 	if err != nil {
@@ -674,7 +674,7 @@ func cmdGenerateProject(args []string) {
 	name := fs.String("name", "my-app", "Project name")
 	auth := fs.Bool("auth", false, "Include auth scaffold")
 	output := fs.String("output", "", "Output directory (default: ./<name>)")
-	fs.Parse(args)
+	parseFlags(fs, args)
 
 	if fs.NArg() > 0 {
 		*name = fs.Arg(0)

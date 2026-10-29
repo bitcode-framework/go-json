@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/bitcode-framework/go-json/stdlib"
 )
@@ -108,6 +109,56 @@ func TestRuntime_Execute_WithLimits(t *testing.T) {
 	}`), nil)
 	if err == nil {
 		t.Fatal("expected step limit error")
+	}
+}
+
+// TestRuntime_WithLimits_ZeroFieldsKeepDefaults guards the regression where
+// WithLimits replaced the whole limits struct: overriding only Timeout zeroed
+// MaxSteps, so every program died with "step limit (0) exceeded" — including
+// the README's Hello World and the entire CLI.
+func TestRuntime_WithLimits_ZeroFieldsKeepDefaults(t *testing.T) {
+	reg := stdlib.DefaultRegistry()
+	rt := NewRuntime(
+		WithStdlib(reg.All()),
+		WithStdlibEnv(reg.EnvVars()),
+		WithLimits(Limits{Timeout: 5 * time.Second}),
+	)
+
+	if got, want := rt.limits.MaxSteps, DefaultLimits().MaxSteps; got != want {
+		t.Errorf("MaxSteps = %d, want default %d", got, want)
+	}
+	if got, want := rt.limits.MaxDepth, DefaultLimits().MaxDepth; got != want {
+		t.Errorf("MaxDepth = %d, want default %d", got, want)
+	}
+	if got, want := rt.limits.Timeout, 5*time.Second; got != want {
+		t.Errorf("Timeout = %v, want overridden %v", got, want)
+	}
+
+	result, err := rt.ExecuteJSON([]byte(`{
+		"name": "hello",
+		"steps": [
+			{"let": "greeting", "value": "Hello, World!"},
+			{"return": "greeting"}
+		]
+	}`), nil)
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if result.Value != "Hello, World!" {
+		t.Errorf("expected 'Hello, World!', got %v", result.Value)
+	}
+}
+
+// TestRuntime_WithLimits_OverridesOnlyGivenFields checks that an explicit
+// limit still takes effect.
+func TestRuntime_WithLimits_OverridesOnlyGivenFields(t *testing.T) {
+	rt := NewRuntime(WithLimits(Limits{MaxSteps: 3}))
+
+	if rt.limits.MaxSteps != 3 {
+		t.Errorf("MaxSteps = %d, want 3", rt.limits.MaxSteps)
+	}
+	if got, want := rt.limits.MaxLoopIterations, DefaultLimits().MaxLoopIterations; got != want {
+		t.Errorf("MaxLoopIterations = %d, want default %d", got, want)
 	}
 }
 

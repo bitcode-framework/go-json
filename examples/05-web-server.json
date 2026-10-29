@@ -1,0 +1,18 @@
+{
+  "name": "my_api",
+  "server": {"port": 3000},
+  "functions": {
+    "listUsers": {
+      "params": {"request": "map"},
+      "steps": [
+        {"return": {"status": 200, "body": [
+          {"id": 1, "name": "Alice"},
+          {"id": 2, "name": "Bob"}
+        ]}}
+      ]
+    }
+  },
+  "routes": [
+    {"method": "GET", "path": "/api/users", "handler": "listUsers"}
+  ]
+}

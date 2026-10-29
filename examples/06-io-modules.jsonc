@@ -1,0 +1,15 @@
+{
+  // I/O module: read a JSON file and aggregate it.
+  // Run with: go-json run examples/06-io-modules.jsonc --io fs
+  "name": "read_and_parse",
+  "go_json": "1",
+  "import": {"fs": "io:fs"},
+  "steps": [
+    // Paths are resolved from the working directory, not the program file.
+    {"let": "raw", "call": "fs.read", "args": ["examples/06-io-modules.data.json"]},
+    {"let": "parsed", "expr": "fromJSON(raw)"},
+    {"let": "total", "expr": "reduce(parsed.items, #acc + #.amount, 0)"},
+    {"let": "summary", "expr": "{orders: len(parsed.items), total: total}"},
+    {"return": "summary"}
+  ]
+}

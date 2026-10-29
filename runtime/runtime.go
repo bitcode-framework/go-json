@@ -28,8 +28,42 @@ func WithStdlibEnv(envVars map[string]any) Option {
 	}
 }
 
+// WithLimits overrides individual resource limits.
+//
+// Zero-valued fields are left untouched, so callers can override just the
+// limit they care about without having to restate every other default:
+//
+//	WithLimits(Limits{Timeout: 5 * time.Second})
+//
+// Replacing the whole struct would zero MaxSteps and make every program fail
+// immediately with "step limit (0) exceeded".
 func WithLimits(limits Limits) Option {
-	return func(r *Runtime) { r.limits = limits }
+	return func(r *Runtime) {
+		if limits.MaxDepth > 0 {
+			r.limits.MaxDepth = limits.MaxDepth
+		}
+		if limits.MaxSteps > 0 {
+			r.limits.MaxSteps = limits.MaxSteps
+		}
+		if limits.MaxLoopIterations > 0 {
+			r.limits.MaxLoopIterations = limits.MaxLoopIterations
+		}
+		if limits.MaxNodes > 0 {
+			r.limits.MaxNodes = limits.MaxNodes
+		}
+		if limits.MaxVariables > 0 {
+			r.limits.MaxVariables = limits.MaxVariables
+		}
+		if limits.MaxVariableSize > 0 {
+			r.limits.MaxVariableSize = limits.MaxVariableSize
+		}
+		if limits.MaxOutputSize > 0 {
+			r.limits.MaxOutputSize = limits.MaxOutputSize
+		}
+		if limits.Timeout > 0 {
+			r.limits.Timeout = limits.Timeout
+		}
+	}
 }
 
 func WithRuntimeLogger(l lang.Logger) Option {

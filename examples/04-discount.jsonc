@@ -1,0 +1,32 @@
+{
+  // JSONC: comments and trailing commas are allowed
+  "name": "discount_calculator",
+  "go_json": "1",
+  "functions": {
+    "calculateDiscount": {
+      "params": {
+        "price": "float",
+        "tier": "string", // trailing comma below
+      },
+      "returns": "float",
+      "steps": [
+        {"_c": "Gold customers get 20% off"},
+        {"if": "tier == 'gold'", "then": [
+          {"return": "price * 0.8"}
+        ]},
+        /* Silver customers get 10% off */
+        {"if": "tier == 'silver'", "then": [
+          {"return": "price * 0.9"}
+        ]},
+        {"return": "price"}
+      ]
+    }
+  },
+  "steps": [
+    {"let": "final_price", "call": "calculateDiscount", "with": {
+      "price": "input.price",
+      "tier": "input.tier"
+    }},
+    {"return": "final_price"}
+  ]
+}

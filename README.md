@@ -45,11 +45,54 @@ go-json is a **complete programming language** — variables, functions, loops, 
 
 ## Installation
 
-### As a CLI tool
+### One-line install (no Go required)
+
+Downloads a prebuilt binary for your OS and architecture, verifies its
+checksum, and puts it on your PATH.
+
+**Linux / macOS:**
 
 ```bash
-go install github.com/bitcode-framework/go-json/cmd/go-json@latest
+curl -fsSL https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.sh | sh
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.ps1 | iex
+```
+
+Git Bash, MSYS2, and Cygwin on Windows also work with the `install.sh` one-liner.
+
+Pin a version or choose the install directory:
+
+```bash
+GO_JSON_VERSION=v0.1.0 GO_JSON_BIN_DIR="$HOME/bin" \
+  curl -fsSL https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.sh | sh
+```
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/bitcode-framework/go-json-runtimes/main/install.ps1))) -Version v0.1.0 -BinDir C:\tools
+```
+
+The installer falls back to `go install` when no prebuilt binary matches your
+platform and a Go toolchain is present.
+
+### With Go
+
+```bash
+# Full build: includes the script runtimes (goja, quickjs, yaegi, wasm)
+go install github.com/bitcode-framework/go-json-runtimes/cmd/go-json@latest
+
+# Lean build: core language only, zero extra dependencies
+go install github.com/bitcode-framework/go-json/cmd/go-json-lite@latest
+```
+
+Two binaries exist because `go-json-runtimes` depends on `go-json`. Core cannot
+import the runtimes without creating a module cycle, and core deliberately keeps
+zero dependencies. Both are called `go-json` at run time when installed from the
+runtimes module — that one is the recommended default because `script:` imports
+work out of the box.
 
 ### As a Go library
 
@@ -57,9 +100,13 @@ go install github.com/bitcode-framework/go-json/cmd/go-json@latest
 go get github.com/bitcode-framework/go-json@latest
 ```
 
-**Requirements:** Go 1.24+
+**Requirements:** Go 1.24+ (only for the Go install path; the one-line
+installer needs no toolchain).
 
 ## Quick Start
+
+Every snippet below has a runnable counterpart in [`examples/`](examples/) —
+clone the repo and run them directly.
 
 ### 1. Hello World
 
@@ -80,6 +127,8 @@ Create `hello.json`:
 go-json run hello.json
 ```
 
+Runnable: [`examples/01-hello-world.json`](examples/01-hello-world.json)
+
 ### 2. With Input
 
 Create `greet.json`:
@@ -98,6 +147,11 @@ Create `greet.json`:
 ```bash
 go-json run greet.json --input '{"name": "Alice", "age": 30}'
 ```
+
+Runnable: [`examples/02-greet-input.json`](examples/02-greet-input.json)
+(with input file [`02-greet-input.input.json`](examples/02-greet-input.input.json))
+
+Flags work before or after the program path.
 
 ### 3. Functions & Recursion
 
@@ -122,6 +176,8 @@ go-json run greet.json --input '{"name": "Alice", "age": 30}'
 }
 ```
 
+Runnable: [`examples/03-factorial.json`](examples/03-factorial.json)
+
 ### 4. Web Server
 
 ```json
@@ -132,10 +188,10 @@ go-json run greet.json --input '{"name": "Alice", "age": 30}'
     "listUsers": {
       "params": {"request": "map"},
       "steps": [
-        {"return": {"value": {"status": 200, "body": [
+        {"return": {"status": 200, "body": [
           {"id": 1, "name": "Alice"},
           {"id": 2, "name": "Bob"}
-        ]}}}
+        ]}}
       ]
     }
   },
@@ -151,20 +207,34 @@ go-json serve api.json
 # Swagger UI at http://localhost:3000/docs
 ```
 
+Runnable: [`examples/05-web-server.json`](examples/05-web-server.json)
+
+Handlers return the response fields at the **top level** (`status`, `body`),
+not nested under `value`.
+
 ### 5. I/O Modules
 
 ```json
 {
-  "name": "fetch_and_save",
-  "import": {"http": "io:http", "fs": "io:fs"},
+  "name": "read_and_parse",
+  "go_json": "1",
+  "import": {"fs": "io:fs"},
   "steps": [
-    {"let": "resp", "call": "http.get", "args": ["https://api.example.com/data"]},
-    {"call": "fs.write", "args": ["./data.json", "raw content here"]},
-    {"call": "fs.write", "with": ["'./result.json'", "toJSON(resp.body)"]},
-    {"return": "resp.body"}
+    {"let": "raw", "call": "fs.read", "args": ["data.json"]},
+    {"let": "parsed", "expr": "fromJSON(raw)"},
+    {"let": "total", "expr": "reduce(parsed.items, #acc + #.amount, 0)"},
+    {"let": "summary", "expr": "{orders: len(parsed.items), total: total}"},
+    {"return": "summary"}
   ]
 }
 ```
+
+```bash
+go-json run read_and_parse.json --io fs
+```
+
+Runnable: [`examples/06-io-modules.jsonc`](examples/06-io-modules.jsonc)
+(with data [`06-io-modules.data.json`](examples/06-io-modules.data.json))
 
 Three ways to call any function — choose based on your needs:
 
@@ -173,6 +243,10 @@ Three ways to call any function — choose based on your needs:
 {"call": "http.get", "with": ["url"]}
 {"let": "r", "expr": "http.get('https://api.com')"}
 ```
+
+`args` passes **literals**; `with` passes **expressions**. `"args": ["data.json"]`
+sends that path, while `"with": ["path"]` sends the variable's value. Stdlib
+functions such as `fromJSON` are reached through `expr`, not `call`.
 
 ### 6. JSONC Support (Comments!)
 
@@ -213,31 +287,42 @@ go-json supports JSONC — JSON with comments and trailing commas:
 }
 ```
 
+Runnable: [`examples/04-discount.jsonc`](examples/04-discount.jsonc)
+
 ### 7. Script Plugins (Multi-Language)
 
-go-json can orchestrate Python, JavaScript, and Go scripts from a single JSON program via the `script:` import prefix. Each script file is loaded by the matching runtime (detected by extension) and exposed as a callable module.
+go-json can orchestrate scripts from a single JSON program via the `script:`
+import prefix. Each script file is loaded by the matching runtime (detected by
+extension) and exposed as a callable module.
 
-This requires the [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes) package, which provides the runtime engines (Goja for JS, QuickJS, Yaegi for Go, subprocess for Python). go-json core stays zero-dependency.
+This requires the [go-json-runtimes](https://github.com/bitcode-framework/go-json-runtimes)
+package, which provides the runtime engines. go-json core stays zero-dependency.
 
 ```json
 {
-  "name": "ml_pipeline",
+  "name": "script_pipeline",
   "go_json": "1",
   "import": {
-    "ml": "script:./plugins/predict.py",
-    "utils": "script:./helpers/format.js",
-    "fast": "script:./compute/process.go"
+    "ml": "script:./plugins/predict.js",
+    "utils": "script:./helpers/format.js"
   },
   "steps": [
-    {"let": "prediction", "call": "ml.call", "with": ["'predict'", "input.features"]},
+    {"let": "prediction", "call": "ml.call", "args": ["predict", [1, 2, 3, 4, 5]]},
     {"let": "formatted", "call": "utils.call", "with": ["'format'", "prediction"]},
-    {"let": "result", "call": "fast.call", "with": ["'process'", "formatted"]},
-    {"return": "result"}
+    {"let": "summary", "expr": "{prediction: prediction, formatted: formatted}"},
+    {"return": "summary"}
   ]
 }
 ```
 
-Each imported script exposes `call(functionName, ...args)` and `exec(code)` to your JSON program. Write your ML in Python, formatting in JavaScript, heavy compute in Go, and glue it all together in JSON.
+Each imported script exposes `call(functionName, ...args)` and `exec(code)` to
+your JSON program. Runnable end to end with the goja runtime:
+[`examples/07-script-plugins/`](examples/07-script-plugins/).
+
+Of the bundled runtimes, only the embedded ones (goja, quickjs, yaegi) and WASM
+execute scripts directly; the Python and Node runtimes validate but report
+"direct execution not yet implemented".
+
 
 ## Embedding in Go
 
@@ -257,6 +342,7 @@ func main() {
         gojson.WithStdlib(reg.All()),
         gojson.WithStdlibEnv(reg.EnvVars()),
     )
+    defer rt.Close()
 
     // Compile program
     program, err := rt.CompileFile("program.json")
@@ -278,15 +364,30 @@ func main() {
 }
 ```
 
+Runnable: [`examples/go/embed-hello`](examples/go/embed-hello)
+
+Use `CompileFile` whenever the program has `import` — `Compile` skips import
+resolution, so `io:`/`ext:`/`script:` imports compile but fail at run time with
+`variable 'fs' not defined`.
+
 ### With I/O Modules
 
 ```go
+sec := goio.DefaultSecurityConfig()
+
 rt := gojson.NewRuntime(
     gojson.WithStdlib(reg.All()),
     gojson.WithStdlibEnv(reg.EnvVars()),
-    gojson.WithIO(goio.HTTP(), goio.FS(), goio.SQL()),
+    gojson.WithIOSecurity(sec),
+    gojson.WithIO(goio.FS(sec)),
 )
 ```
+
+Module constructors take a `*SecurityConfig` (pass `nil` for the defaults).
+Filesystem writes are disabled by default: set `sec.FS.AllowWrite = true` and
+scope it with `sec.FS.AllowedPaths`.
+
+Runnable: [`examples/go/embed-io`](examples/go/embed-io)
 
 ### With Custom Extensions
 
@@ -295,10 +396,10 @@ rt := gojson.NewRuntime(
     gojson.WithStdlib(reg.All()),
     gojson.WithStdlibEnv(reg.EnvVars()),
     gojson.WithoutIO(),
-    gojson.WithExtension("myapp", runtime.Extension{
+    gojson.WithExtension("myapp", gojson.Extension{
         Functions: map[string]any{
-            "getUser": func(id string) (map[string]any, error) {
-                // your Go code here
+            // Must be func(...any) (any, error) — the native signature.
+            "getUser": func(args ...any) (any, error) {
                 return map[string]any{"name": "Alice"}, nil
             },
         },
@@ -306,10 +407,13 @@ rt := gojson.NewRuntime(
 )
 ```
 
+Runnable: [`examples/go/embed-extension`](examples/go/embed-extension)
+
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
+| [Examples](examples/README.md) | Runnable programs for every snippet in this README |
 | [Features](features.md) | Complete feature overview with capability matrix |
 | **Language** | |
 | [Language Reference](docs/language-reference.md) | Step types, syntax, type system, scoping rules |

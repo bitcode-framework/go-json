@@ -1,0 +1,14 @@
+{
+  "name": "script_pipeline",
+  "go_json": "1",
+  "import": {
+    "ml": "script:./plugins/predict.js",
+    "utils": "script:./helpers/format.js"
+  },
+  "steps": [
+    {"let": "prediction", "call": "ml.call", "args": ["predict", [1, 2, 3, 4, 5]]},
+    {"let": "formatted", "call": "utils.call", "with": ["'format'", "prediction"]},
+    {"let": "summary", "expr": "{prediction: prediction, formatted: formatted}"},
+    {"return": "summary"}
+  ]
+}

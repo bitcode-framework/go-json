@@ -26,7 +26,9 @@ packages/go-json/
 ├── server/         Web server execution mode: adapters (Fiber/net-http/Echo/Gin/Chi), middleware, JWT, auth, templates, static, OpenAPI (Phase 4.5d)
 ├── server/adapters/ Framework adapter implementations (ServerAdapter interface)
 ├── generate/       CRUD generator, auth scaffold, project scaffold, pattern templates, DB introspection (Phase 4.5d)
-├── cmd/go-json/    CLI: run, serve, check, test, ast, codegen, generate, openapi, migrate commands
+├── cmd/go-json-lite/  CLI: run, serve, check, test, ast, codegen, generate, openapi, migrate (core only, no script runtimes)
+├── cmd/cli/        Shared CLI implementation (commands.go, args.go)
+├── examples/       Runnable programs backing the README + examples_test.go + go/ embedding examples
 └── testdata/       Test fixture programs (.json, .jsonc)
 ```
 

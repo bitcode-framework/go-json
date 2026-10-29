@@ -1,0 +1,8 @@
+{
+  "name": "greet",
+  "input": {"name": "string", "age": "int"},
+  "steps": [
+    {"let": "msg", "expr": "'Hello, ' + input.name + '! You are ' + string(input.age) + ' years old.'"},
+    {"return": "msg"}
+  ]
+}
