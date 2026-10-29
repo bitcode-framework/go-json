@@ -18,7 +18,12 @@ import (
 	"github.com/bitcode-framework/go-json/stdlib"
 )
 
-const Version = "0.1.0"
+// Version is the CLI version. It defaults to the core language version and can
+// be overridden at link time by release builds, so a binary reports the version
+// of the module it was installed from:
+//
+//	go build -ldflags "-X github.com/bitcode-framework/go-json/cmd/cli.Version=0.1.1"
+var Version = "0.1.0"
 
 // Run executes the go-json CLI with the given options.
 // Call ApplyOptions before Run to register script runtimes.
