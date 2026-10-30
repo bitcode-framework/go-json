@@ -4,6 +4,8 @@ A general-purpose programming language written in JSON/JSONC, embeddable in Go a
 
 **Write programs in JSON. Run them anywhere Go runs.**
 
+**[▶ Try it in your browser](https://bitcode-framework.github.io/go-json/)** — no install, the engine is compiled to WebAssembly.
+
 ```json
 {
   "name": "hello",
